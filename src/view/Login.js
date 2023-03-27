@@ -1,4 +1,6 @@
 import {useContext, useEffect, useRef, useState} from "react";
+import axios from "axios";
+import reCAPTCHA from "react-google-recaptcha"
 import {AuthContext} from "../context/authContext";
 
 export default function Login()
@@ -9,22 +11,34 @@ export default function Login()
     const emailInput   = useRef();
     const passInput    = useRef();
     const buttonInput  = useRef();
+    const captchaRef   = useRef(null)
 
-    function login(e)
-    {
+    async function login(e) {
         e.preventDefault();
-        if (password === '1234')
-        {
+        const token = captchaRef.current.getValue();
+        captchaRef.current.reset();
+
+        await axios.post(process.env.REACT_APP_API_URL, {token})
+            .then(res => console.log(res))
+
+            .catch((error) =>
+            {
+                console.log(error);
+            }
+        )
+
+        if (password === '1234') {
             const token = 'TOKEN:LIJLASASDHAJKEDHIU';
-            localStorage.setItem('email',email);
-            localStorage.setItem('token',token);
+            localStorage.setItem('email', email);
+            localStorage.setItem('token', token);
             authContext.setAuth({email, token});
-        }else {
+        } else {
             alert('wrong password');
         }
     }
 
-    useEffect(()=>{
+    useEffect(()=>
+    {
         emailInput.current.focus();
     },[])
 
@@ -35,6 +49,7 @@ export default function Login()
             passInput.current.focus();
         }
     }
+
     function passwordKeyDown(e)
     {
          if (e.key === 'Enter')
@@ -42,6 +57,7 @@ export default function Login()
             buttonInput.current.focus();
         }
     }
+
     return (
         <div className='container mt-2 mb-3'>
             <form>
@@ -53,11 +69,15 @@ export default function Login()
                 </div>
                 <div className="form-group mb-2">
                     <label htmlFor="exampleInputPassword1">Password</label>
-                    <input ref={passInput} onKeyDown={passwordKeyDown}  type="password" value={password} className="form-control" id="exampleInputPassword1"
+                    <input ref={passInput}
+                           onKeyDown={passwordKeyDown}
+                           type="password" value={password}
+                           className="form-control"
+                           id="exampleInputPassword1"
                            placeholder="Password"
                            onChange={(e)=>{setPassword(e.target.value)}}/>
                 </div>
-
+                <reCAPTCHA sitekey={process.env.REACT_APP_SITE_KEY} ref={captchaRef}/>
                 <button  ref={buttonInput} className="btn btn-primary" onClick={login}> SEND </button>
             </form>
         </div>
